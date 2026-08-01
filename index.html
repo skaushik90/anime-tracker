@@ -582,8 +582,31 @@ function ovClick(e,ovId,fn){if(e.target.id===ovId)window[fn]()}
 /* ============================================================
    MAL SEARCH (Jikan API)
    ============================================================ */
-// Cache MAL search results in memory (not on DOM element — avoids innerHTML wipe issues)
-let malCache = [];
+/* ============================================================
+   ANIME SEARCH — AniList GraphQL API
+   Free, no API key, CORS-enabled, 90 req/min
+   Falls back to MAL URL via idMal field on every result
+   ============================================================ */
+let animeCache = [];
+
+const ANILIST_QUERY = `
+query ($search: String) {
+  Page(page: 1, perPage: 8) {
+    media(search: $search, type: ANIME, sort: SEARCH_MATCH) {
+      id
+      idMal
+      title { romaji english native }
+      coverImage { large medium }
+      format
+      episodes
+      seasonYear
+      studios(isMain: true) { nodes { name } }
+      genres
+      averageScore
+      siteUrl
+    }
+  }
+}`;
 
 function malSearch(q){
   clearTimeout(malTimer);
@@ -591,85 +614,83 @@ function malSearch(q){
   const spin=document.getElementById('mal-spin');
   if(!q||q.length<2){res.classList.remove('show');spin.classList.remove('show');return}
   spin.classList.add('show');
-  const capturedQ = q; // capture value, not reference
-  malTimer=setTimeout(()=>doMalSearch(capturedQ),500);
+  const capturedQ=q;
+  malTimer=setTimeout(()=>doAnimeSearch(capturedQ),400);
 }
 
-async function doMalSearch(q){
+async function doAnimeSearch(q){
   const res=document.getElementById('mal-results');
   const spin=document.getElementById('mal-spin');
   try{
-    // Use no-cors-workaround: fetch with explicit headers Jikan accepts
-    const url=`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(q)}&limit=8&sfw=true`;
-    const r=await fetch(url, {
-      method: 'GET',
-      headers: { 'Accept': 'application/json' }
+    const r=await fetch('https://graphql.anilist.co',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify({query:ANILIST_QUERY, variables:{search:q}})
     });
     spin.classList.remove('show');
-    if(r.status===429){
-      console.warn('Jikan rate limited (429) — retrying in 2s');
-      res.innerHTML='<div style="padding:12px;color:var(--gold);font-size:12px">⏳ Rate limited — retrying…</div>';
-      res.classList.add('show');
-      setTimeout(()=>doMalSearch(q), 2000);
-      return;
-    }
     if(!r.ok){
-      const errText = await r.text();
-      console.error('Jikan HTTP error:', r.status, errText);
-      res.innerHTML=`<div style="padding:12px;color:var(--red);font-size:12px">API error ${r.status} — try again in a moment</div>`;
-      res.classList.add('show');
-      return;
+      console.error('AniList error:',r.status);
+      res.innerHTML=`<div style="padding:12px;color:var(--red);font-size:12px">Search error (${r.status}) — try again</div>`;
+      res.classList.add('show');return;
     }
     const d=await r.json();
-    if(!d.data||!d.data.length){
-      res.innerHTML='<div style="padding:12px;color:var(--text3);font-size:12px">No results found on MyAnimeList</div>';
-      res.classList.add('show');
-      return;
+    const results=d?.data?.Page?.media||[];
+    if(!results.length){
+      res.innerHTML='<div style="padding:12px;color:var(--text3);font-size:12px">No results found</div>';
+      res.classList.add('show');return;
     }
-    // Store in memory cache
-    malCache=d.data;
-    res.innerHTML=d.data.map(a=>`
-      <div class="mal-result" onclick="pickMAL(${a.mal_id})">
-        <img src="${esc(a.images?.jpg?.small_image_url||a.images?.webp?.small_image_url||'')}" alt="" loading="lazy" onerror="this.style.background='var(--s4)'">
+    animeCache=results;
+    res.innerHTML=results.map(a=>{
+      const title=a.title.english||a.title.romaji||a.title.native||'Unknown';
+      const img=a.coverImage?.medium||a.coverImage?.large||'';
+      const fmt=a.format?a.format.replace('_',' '):'';
+      const score=a.averageScore?`${(a.averageScore/10).toFixed(1)}`:'—';
+      return `<div class="mal-result" onclick="pickAnime(${a.id})">
+        <img src="${esc(img)}" alt="" loading="lazy" onerror="this.style.background='var(--s4)'">
         <div class="mal-result-info">
-          <div class="mal-result-title">${esc(a.title)}</div>
-          <div class="mal-result-sub">${esc(a.type||'')}${a.year?' · '+a.year:''}${a.episodes?' · '+a.episodes+' eps':''}</div>
+          <div class="mal-result-title">${esc(title)}</div>
+          <div class="mal-result-sub">${esc(fmt)}${a.seasonYear?' · '+a.seasonYear:''}${a.episodes?' · '+a.episodes+' eps':''}</div>
         </div>
-        <div class="mal-result-score">${a.score||'—'}</div>
-      </div>`).join('');
+        <div class="mal-result-score">${score}</div>
+      </div>`;
+    }).join('');
     res.classList.add('show');
   }catch(e){
     spin.classList.remove('show');
-    console.error('Jikan fetch failed:', e);
-    res.innerHTML=`<div style="padding:12px;color:var(--red);font-size:12px">⚠ Could not reach MyAnimeList — check your connection<br><span style="color:var(--text3);font-size:10px">${e.message}</span></div>`;
+    console.error('AniList search failed:',e);
+    res.innerHTML=`<div style="padding:12px;color:var(--red);font-size:12px">⚠ Search failed — check connection<br><span style="color:var(--text3);font-size:10px">${e.message}</span></div>`;
     res.classList.add('show');
   }
 }
 
-async function pickMAL(id){
-  // Use in-memory cache first, then fetch by id if needed
-  const cached=malCache.find(a=>a.mal_id===id);
-  const a=cached||await (async()=>{
-    try{
-      const r=await fetch(`https://api.jikan.moe/v4/anime/${id}`,{headers:{'Accept':'application/json'}});
-      const d=await r.json();
-      return d.data;
-    }catch(e){console.error('pickMAL fetch failed:',e);return null}
-  })();
+async function pickAnime(anilistId){
+  const a=animeCache.find(x=>x.id===anilistId);
   if(!a)return;
-  selMAL=a;
-  document.getElementById('f-title').value=a.title||'';
-  document.getElementById('f-year').value=a.year||a.aired?.prop?.from?.year||'';
+  selMAL=a; // store for saveAnime to reference
+
+  // Map AniList fields → form fields
+  const title=a.title.english||a.title.romaji||a.title.native||'';
+  const studio=(a.studios?.nodes||[]).map(s=>s.name).join(', ')||'';
+  const malUrl=a.idMal?`https://myanimelist.net/anime/${a.idMal}`:'';
+  const cover=a.coverImage?.large||a.coverImage?.medium||'';
+  const score=a.averageScore?(a.averageScore/10).toFixed(1):'';
+
+  document.getElementById('f-title').value=title;
+  document.getElementById('f-year').value=a.seasonYear||'';
   document.getElementById('f-ept').value=a.episodes||'';
-  document.getElementById('f-studio').value=(a.studios||[]).map(s=>s.name).join(', ')||'';
-  document.getElementById('f-mal').value=a.url||`https://myanimelist.net/anime/${a.mal_id}`;
-  const malGenres=(a.genres||[]).map(g=>g.name);
-  formGenres=[...new Set([...formGenres,...malGenres.filter(g=>GENRES.includes(g))])];
+  document.getElementById('f-studio').value=studio;
+  document.getElementById('f-mal').value=malUrl;
+
+  // Auto-select matching genres
+  const aniGenres=a.genres||[];
+  formGenres=[...new Set([...formGenres,...aniGenres.filter(g=>GENRES.includes(g))])];
   buildGchips();
-  document.getElementById('sel-img').src=a.images?.jpg?.image_url||'';
-  document.getElementById('sel-title').textContent=a.title||'';
-  const yr=a.year||a.aired?.prop?.from?.year||'';
-  document.getElementById('sel-meta').textContent=[yr,a.episodes?a.episodes+' eps':'',a.score?'★ '+a.score:''].filter(Boolean).join(' · ');
+
+  // Show selected preview card
+  document.getElementById('sel-img').src=cover;
+  document.getElementById('sel-title').textContent=title;
+  document.getElementById('sel-meta').textContent=
+    [a.seasonYear,a.episodes?a.episodes+' eps':'',score?'★ '+score:''].filter(Boolean).join(' · ');
   document.getElementById('mal-sel').classList.add('show');
   document.getElementById('mal-results').classList.remove('show');
   document.getElementById('mal-q').value='';
@@ -778,8 +799,8 @@ async function saveAnime(){
 
   const isEdit=!!editId;
   const existing=isEdit?DB.find(x=>x.id===editId):{};
-  const cover=selMAL?.images?.jpg?.large_image_url||selMAL?.images?.jpg?.image_url||existing?.cover||null;
-  const malId=selMAL?.mal_id||existing?.malId||null;
+  const cover=selMAL?.coverImage?.large||selMAL?.coverImage?.medium||existing?.cover||null;
+  const malId=selMAL?.idMal||existing?.malId||null;
 
   const data={
     id:editId||uid(),
