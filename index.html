@@ -582,36 +582,80 @@ function ovClick(e,ovId,fn){if(e.target.id===ovId)window[fn]()}
 /* ============================================================
    MAL SEARCH (Jikan API)
    ============================================================ */
+// Cache MAL search results in memory (not on DOM element — avoids innerHTML wipe issues)
+let malCache = [];
+
 function malSearch(q){
   clearTimeout(malTimer);
   const res=document.getElementById('mal-results');
   const spin=document.getElementById('mal-spin');
   if(!q||q.length<2){res.classList.remove('show');spin.classList.remove('show');return}
   spin.classList.add('show');
-  malTimer=setTimeout(async()=>{
-    try{
-      const r=await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(q)}&limit=8&sfw=true`);
-      const d=await r.json();
-      spin.classList.remove('show');
-      if(!d.data||!d.data.length){res.innerHTML='<div style="padding:12px;color:var(--text3);font-size:12px">No results</div>';res.classList.add('show');return}
-      res.innerHTML=d.data.map(a=>`
-        <div class="mal-result" onclick="pickMAL(${a.mal_id})">
-          <img src="${esc(a.images?.jpg?.small_image_url||'')}" alt="" loading="lazy">
-          <div class="mal-result-info">
-            <div class="mal-result-title">${esc(a.title)}</div>
-            <div class="mal-result-sub">${a.type||''}${a.year?' · '+a.year:''}${a.episodes?' · '+a.episodes+' eps':''}</div>
-          </div>
-          <div class="mal-result-score">${a.score||'—'}</div>
-        </div>`).join('');
+  const capturedQ = q; // capture value, not reference
+  malTimer=setTimeout(()=>doMalSearch(capturedQ),500);
+}
+
+async function doMalSearch(q){
+  const res=document.getElementById('mal-results');
+  const spin=document.getElementById('mal-spin');
+  try{
+    // Use no-cors-workaround: fetch with explicit headers Jikan accepts
+    const url=`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(q)}&limit=8&sfw=true`;
+    const r=await fetch(url, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' }
+    });
+    spin.classList.remove('show');
+    if(r.status===429){
+      console.warn('Jikan rate limited (429) — retrying in 2s');
+      res.innerHTML='<div style="padding:12px;color:var(--gold);font-size:12px">⏳ Rate limited — retrying…</div>';
       res.classList.add('show');
-      res._data=d.data;
-    }catch(e){spin.classList.remove('show');res.innerHTML='<div style="padding:12px;color:var(--text3);font-size:12px">Search error</div>';res.classList.add('show')}
-  },500);
+      setTimeout(()=>doMalSearch(q), 2000);
+      return;
+    }
+    if(!r.ok){
+      const errText = await r.text();
+      console.error('Jikan HTTP error:', r.status, errText);
+      res.innerHTML=`<div style="padding:12px;color:var(--red);font-size:12px">API error ${r.status} — try again in a moment</div>`;
+      res.classList.add('show');
+      return;
+    }
+    const d=await r.json();
+    if(!d.data||!d.data.length){
+      res.innerHTML='<div style="padding:12px;color:var(--text3);font-size:12px">No results found on MyAnimeList</div>';
+      res.classList.add('show');
+      return;
+    }
+    // Store in memory cache
+    malCache=d.data;
+    res.innerHTML=d.data.map(a=>`
+      <div class="mal-result" onclick="pickMAL(${a.mal_id})">
+        <img src="${esc(a.images?.jpg?.small_image_url||a.images?.webp?.small_image_url||'')}" alt="" loading="lazy" onerror="this.style.background='var(--s4)'">
+        <div class="mal-result-info">
+          <div class="mal-result-title">${esc(a.title)}</div>
+          <div class="mal-result-sub">${esc(a.type||'')}${a.year?' · '+a.year:''}${a.episodes?' · '+a.episodes+' eps':''}</div>
+        </div>
+        <div class="mal-result-score">${a.score||'—'}</div>
+      </div>`).join('');
+    res.classList.add('show');
+  }catch(e){
+    spin.classList.remove('show');
+    console.error('Jikan fetch failed:', e);
+    res.innerHTML=`<div style="padding:12px;color:var(--red);font-size:12px">⚠ Could not reach MyAnimeList — check your connection<br><span style="color:var(--text3);font-size:10px">${e.message}</span></div>`;
+    res.classList.add('show');
+  }
 }
 
 async function pickMAL(id){
-  const cached=document.getElementById('mal-results')._data?.find(a=>a.mal_id===id);
-  const a=cached||await (async()=>{try{const r=await fetch(`https://api.jikan.moe/v4/anime/${id}`);const d=await r.json();return d.data}catch{return null}})();
+  // Use in-memory cache first, then fetch by id if needed
+  const cached=malCache.find(a=>a.mal_id===id);
+  const a=cached||await (async()=>{
+    try{
+      const r=await fetch(`https://api.jikan.moe/v4/anime/${id}`,{headers:{'Accept':'application/json'}});
+      const d=await r.json();
+      return d.data;
+    }catch(e){console.error('pickMAL fetch failed:',e);return null}
+  })();
   if(!a)return;
   selMAL=a;
   document.getElementById('f-title').value=a.title||'';
