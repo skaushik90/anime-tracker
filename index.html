@@ -2,8 +2,29 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>AniLog — Anime Tracker</title>
+
+<!-- PWA Manifest -->
+<link rel="manifest" href="manifest.json">
+
+<!-- Theme & Status Bar -->
+<meta name="theme-color" content="#080810">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="AniLog">
+
+<!-- iOS Specific -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AniLog">
+<link rel="apple-touch-icon" href="icons/icon-152.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png">
+<link rel="apple-touch-icon" sizes="192x192" href="icons/icon-192.png">
+
+<!-- Favicon -->
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-96.png">
+
+<!-- Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -279,6 +300,231 @@ main{padding:1.5rem;max-width:1440px;margin:0 auto}
 .loading-bar-track{width:200px;height:3px;background:var(--s3);border-radius:2px;overflow:hidden}
 .loading-bar-fill{height:100%;background:var(--accent);border-radius:2px;animation:loadbar 1.5s ease-in-out infinite}
 @keyframes loadbar{0%{width:0;margin-left:0}50%{width:60%;margin-left:20%}100%{width:0;margin-left:100%}}
+
+/* ============================================================
+   PWA / MOBILE STYLES
+   ============================================================ */
+
+/* Safe area insets for notch phones */
+body {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Hide top nav + header buttons on mobile, show bottom nav instead */
+@media (max-width: 640px) {
+
+  /* Slimmer header */
+  header {
+    height: 52px;
+    padding: 0 1rem;
+    padding-top: env(safe-area-inset-top);
+  }
+
+  /* Hide desktop stats and buttons that don't fit */
+  .hstats { display: none; }
+  .btn-sync { display: none; }
+  .save-indicator { display: none; }
+
+  /* Compact logo */
+  .logo { font-size: 22px; }
+  .logo-sync { display: none; }
+
+  /* Add button stays, shrink it */
+  .btn-primary { padding: 6px 12px; font-size: 11px; }
+
+  /* Hide top horizontal nav — replaced by bottom nav */
+  .nav { display: none; }
+
+  /* Sync bar smaller */
+  .sync-bar { padding: 6px 1rem; font-size: 11px; }
+
+  /* Main content — leave room for bottom nav */
+  main {
+    padding: 1rem;
+    padding-bottom: calc(70px + env(safe-area-inset-bottom));
+  }
+
+  /* Tighter toolbar */
+  .toolbar { gap: 8px; margin-bottom: 1rem; }
+  .sort-grp { display: none; } /* Too cramped, hidden on mobile */
+
+  /* Status pills — horizontal scroll on mobile */
+  .spills {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+    margin-bottom: 1rem;
+  }
+  .spills::-webkit-scrollbar { display: none; }
+  .spill { flex-shrink: 0; }
+
+  /* 2-column card grid on mobile */
+  .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .card-img { height: 120px; }
+  .card-body { padding: 9px; }
+  .card-title { font-size: 11px; }
+  .card-tags { margin-bottom: 6px; min-height: 14px; }
+  .card-acts { gap: 3px; }
+  .cact { font-size: 9px; padding: 4px; }
+  .rnum { font-size: 14px; }
+
+  /* Modals — full screen on mobile */
+  .overlay { padding: 0; align-items: flex-end; }
+  .modal {
+    border-radius: 20px 20px 0 0;
+    max-height: 92vh;
+    width: 100%;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+  }
+  .mhead { padding: 16px 18px 12px; }
+  .mbody { padding: 14px 18px 20px; padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
+
+  /* Form grid single column on mobile */
+  .fgrid { grid-template-columns: 1fr; }
+  .fg.full { grid-column: 1; }
+
+  /* Touch-friendly inputs */
+  .fg input, .fg select, .fg textarea { font-size: 16px; } /* prevents iOS zoom */
+
+  /* Tier selector wraps */
+  .tsel { flex-wrap: wrap; gap: 8px; }
+  .topt { width: 44px; height: 44px; }
+
+  /* Rating stars bigger for touch */
+  .rstar { font-size: 28px; }
+
+  /* Detail modal */
+  .det-hero { height: 140px; }
+  .det-meta { grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  /* Stats — single column */
+  .skg { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .skn { font-size: 28px; }
+  #tab-stats > div[style*="grid-template-columns:1fr 1fr"] {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Tier list cards */
+  .tcards { grid-template-columns: 1fr 1fr; }
+
+  /* Pillars */
+  .pv-grid { grid-template-columns: 1fr; }
+
+  /* Top 10 images */
+  .top10-img { display: none; }
+}
+
+/* BOTTOM NAVIGATION BAR (mobile only) */
+.bottom-nav {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(10, 10, 20, 0.97);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border);
+    padding: 8px 0;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+    z-index: 90;
+    justify-content: space-around;
+  }
+
+  .bnav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    padding: 4px 16px;
+    border-radius: 10px;
+    transition: all .15s;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    min-width: 60px;
+  }
+
+  .bnav-item:active { transform: scale(0.92); }
+
+  .bnav-icon {
+    font-size: 22px;
+    line-height: 1;
+    transition: transform .15s;
+  }
+
+  .bnav-label {
+    font-size: 9px;
+    font-weight: 500;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+
+  .bnav-item.active .bnav-icon { transform: scale(1.1); }
+  .bnav-item.active .bnav-label { color: var(--accent); }
+
+  /* FAB — Add Anime button on mobile */
+  .fab {
+    display: flex;
+    position: fixed;
+    bottom: calc(70px + env(safe-area-inset-bottom));
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    background: var(--accent);
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(255,61,110,0.4);
+    cursor: pointer;
+    z-index: 89;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform .15s, box-shadow .15s;
+    line-height: 1;
+  }
+  .fab:active { transform: scale(0.92); box-shadow: 0 2px 10px rgba(255,61,110,0.3); }
+
+  /* Hide desktop Add button on mobile (FAB replaces it) */
+  .btn-primary { display: none; }
+}
+
+/* Install prompt banner */
+.install-banner {
+  display: none;
+  position: fixed;
+  bottom: calc(80px + env(safe-area-inset-bottom));
+  left: 16px;
+  right: 16px;
+  background: var(--s2);
+  border: 1px solid var(--border2);
+  border-radius: 14px;
+  padding: 14px 16px;
+  z-index: 95;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  animation: tIn .3s ease;
+}
+.install-banner.show { display: flex; align-items: center; gap: 12px; }
+.install-banner-text { flex: 1; }
+.install-banner-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+.install-banner-sub { font-size: 11px; color: var(--text3); }
+.install-banner-btns { display: flex; gap: 8px; flex-shrink: 0; }
+.install-btn { padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; border: none; font-family: inherit; }
+.install-btn-yes { background: var(--accent); color: #fff; }
+.install-btn-no { background: var(--s3); color: var(--text2); }
 </style>
 </head>
 <body>
@@ -440,6 +686,42 @@ main{padding:1.5rem;max-width:1440px;margin:0 auto}
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="bottom-nav" id="bottom-nav">
+  <div class="bnav-item active" data-tab="library" onclick="goTab('library')">
+    <div class="bnav-icon">📚</div>
+    <div class="bnav-label">Library</div>
+  </div>
+  <div class="bnav-item" data-tab="tierlist" onclick="goTab('tierlist')">
+    <div class="bnav-icon">🏆</div>
+    <div class="bnav-label">Tiers</div>
+  </div>
+  <div class="bnav-item" data-tab="pillars" onclick="goTab('pillars')">
+    <div class="bnav-icon">📺</div>
+    <div class="bnav-label">Pillars</div>
+  </div>
+  <div class="bnav-item" data-tab="stats" onclick="goTab('stats')">
+    <div class="bnav-icon">📊</div>
+    <div class="bnav-label">Stats</div>
+  </div>
+</nav>
+
+<!-- MOBILE FAB (Add Anime) -->
+<div class="fab" id="fab" onclick="openAdd()" title="Add Anime">＋</div>
+
+<!-- PWA INSTALL BANNER -->
+<div class="install-banner" id="install-banner">
+  <div>📲</div>
+  <div class="install-banner-text">
+    <div class="install-banner-title">Add AniLog to Home Screen</div>
+    <div class="install-banner-sub">Use it like a native app — works offline too</div>
+  </div>
+  <div class="install-banner-btns">
+    <button class="install-btn install-btn-yes" onclick="installPWA()">Install</button>
+    <button class="install-btn install-btn-no" onclick="dismissInstall()">Later</button>
+  </div>
+</div>
 
 <script>
 /* ============================================================
@@ -1040,16 +1322,77 @@ function renderStats(){
 }
 
 /* ============================================================
-   TABS
+   TABS — syncs both top nav (desktop) and bottom nav (mobile)
    ============================================================ */
 function goTab(tab){
   ['library','tierlist','pillars','stats'].forEach(t=>{
     document.getElementById('tab-'+t).classList.toggle('hidden',t!==tab);
-    document.querySelector(`.ntab[data-tab="${t}"]`).classList.toggle('active',t===tab);
+    // Top nav
+    const topTab=document.querySelector(`.ntab[data-tab="${t}"]`);
+    if(topTab) topTab.classList.toggle('active',t===tab);
+    // Bottom nav
+    const botTab=document.querySelector(`.bnav-item[data-tab="${t}"]`);
+    if(botTab) botTab.classList.toggle('active',t===tab);
   });
   if(tab==='tierlist')renderTier();
   if(tab==='pillars')renderPillars();
   if(tab==='stats')renderStats();
+}
+
+/* ============================================================
+   PWA — Service Worker + Install Prompt
+   ============================================================ */
+let deferredInstallPrompt = null;
+
+function registerSW(){
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('sw.js')
+      .then(reg => console.log('SW registered, scope:', reg.scope))
+      .catch(err => console.warn('SW registration failed:', err));
+  }
+}
+
+// Capture the install prompt (Android Chrome / some iOS browsers)
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  // Only show if not already dismissed
+  if(!localStorage.getItem('pwa_dismissed')){
+    setTimeout(() => document.getElementById('install-banner').classList.add('show'), 3000);
+  }
+});
+
+async function installPWA(){
+  document.getElementById('install-banner').classList.remove('show');
+  if(deferredInstallPrompt){
+    deferredInstallPrompt.prompt();
+    const { outcome } = await deferredInstallPrompt.userChoice;
+    console.log('PWA install outcome:', outcome);
+    deferredInstallPrompt = null;
+  }
+}
+
+function dismissInstall(){
+  document.getElementById('install-banner').classList.remove('show');
+  localStorage.setItem('pwa_dismissed','1');
+}
+
+// iOS doesn't fire beforeinstallprompt — show manual instructions instead
+function checkIOSInstall(){
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone;
+  const dismissed = localStorage.getItem('pwa_dismissed');
+  if(isIOS && !isStandalone && !dismissed){
+    // Replace install banner text for iOS
+    setTimeout(()=>{
+      const banner = document.getElementById('install-banner');
+      banner.querySelector('.install-banner-title').textContent = 'Add to Home Screen';
+      banner.querySelector('.install-banner-sub').textContent = 'Tap Share → "Add to Home Screen" in Safari';
+      banner.querySelector('.install-btn-yes').textContent = 'Got it';
+      banner.querySelector('.install-btn-yes').onclick = dismissInstall;
+      banner.classList.add('show');
+    }, 3000);
+  }
 }
 
 /* ============================================================
@@ -1064,14 +1407,25 @@ document.addEventListener('keydown',e=>{
    INIT
    ============================================================ */
 async function init(){
+  // Register service worker for offline support
+  registerSW();
+
   document.getElementById('loading-msg').textContent='Connecting to Google Sheets…';
-  // Try to show cached data instantly while fetching
+
+  // Show cached data instantly while network loads
   const cached=localStorage.getItem('anilog_cache');
   if(cached){
     try{const d=JSON.parse(cached);DB=d.animes||[];PILLARS=d.pillars||[];updateHS();renderLib();refreshGenreFilter();refreshPillarFilter();}catch(e){}
   }
+
   await loadFromSheets();
   document.getElementById('loading').classList.add('done');
+
+  // Check if running via URL ?action=add (from PWA shortcut)
+  if(new URLSearchParams(location.search).get('action')==='add') openAdd();
+
+  // iOS install prompt
+  checkIOSInstall();
 }
 
 init();
