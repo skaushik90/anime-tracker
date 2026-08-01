@@ -748,6 +748,9 @@ let lastSaved=null;
 
 /* ============================================================
    GOOGLE SHEETS API
+   ============================================================
+   All requests use GET — avoids CORS preflight that blocks POST
+   from PWA/mobile. Data is sent as URL-encoded ?payload=... param.
    ============================================================ */
 async function apiGet(action){
   const url=`${API}?action=${action}&t=${Date.now()}`;
@@ -755,11 +758,11 @@ async function apiGet(action){
   return r.json();
 }
 
-async function apiPost(body){
-  const r=await fetch(API,{
-    method:'POST',
-    body:JSON.stringify(body)
-  });
+async function apiSend(action, data){
+  // Encode data as a GET parameter — no preflight, no CORS block
+  const payload=encodeURIComponent(JSON.stringify(data));
+  const url=`${API}?action=${action}&payload=${payload}&t=${Date.now()}`;
+  const r=await fetch(url);
   return r.json();
 }
 
@@ -791,10 +794,9 @@ async function loadFromSheets(){
 
 async function saveToSheets(anime){
   setSaveStatus('saving','Saving…');
-  // Cache locally immediately
   localStorage.setItem('anilog_cache',JSON.stringify({animes:DB,pillars:PILLARS}));
   try{
-    const res=await apiPost({action:'save',anime});
+    const res=await apiSend('save', anime);
     if(res.error) throw new Error(res.error);
     setSaveStatus('saved','Saved to Sheets ✓');
     return true;
@@ -807,7 +809,7 @@ async function saveToSheets(anime){
 
 async function deleteFromSheets(id){
   try{
-    const res=await apiPost({action:'delete',id});
+    const res=await apiSend('delete', {id});
     if(res.error) throw new Error(res.error);
     return true;
   }catch(e){
@@ -817,7 +819,7 @@ async function deleteFromSheets(id){
 }
 
 async function savePillarsToSheets(){
-  try{await apiPost({action:'savePillars',pillars:PILLARS})}catch(e){}
+  try{await apiSend('savePillars',{pillars:PILLARS})}catch(e){}
   localStorage.setItem('anilog_cache',JSON.stringify({animes:DB,pillars:PILLARS}));
 }
 
