@@ -525,6 +525,22 @@ body {
 .install-btn { padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; border: none; font-family: inherit; }
 .install-btn-yes { background: var(--accent); color: #fff; }
 .install-btn-no { background: var(--s3); color: var(--text2); }
+
+/* COVER FETCH PROGRESS */
+.cfetch-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:300;display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+.cfetch-overlay.open{display:flex}
+.cfetch-modal{background:var(--s1);border:1px solid var(--border2);border-radius:16px;width:90%;max-width:440px;padding:28px;text-align:center}
+.cfetch-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;margin-bottom:6px}
+.cfetch-sub{font-size:12px;color:var(--text2);margin-bottom:20px}
+.cfetch-track{width:100%;height:6px;background:var(--s3);border-radius:3px;overflow:hidden;margin-bottom:12px}
+.cfetch-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:3px;transition:width .4s ease;width:0%}
+.cfetch-count{font-size:13px;color:var(--text2);margin-bottom:6px}
+.cfetch-current{font-size:11px;color:var(--text3);height:16px;margin-bottom:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cfetch-stats{display:flex;gap:20px;justify-content:center;margin-bottom:20px}
+.cfetch-stat{text-align:center}
+.cfetch-stat-n{font-family:'Bebas Neue',sans-serif;font-size:26px}
+.cfetch-stat-l{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.cfetch-done-msg{font-size:13px;color:var(--green);margin-bottom:16px;display:none}
 </style>
 </head>
 <body>
@@ -556,6 +572,7 @@ body {
   <div class="hbtns">
     <div class="save-indicator"><div class="save-dot" id="save-dot"></div><span id="save-label">Saved</span></div>
     <button class="btn btn-sync" onclick="loadFromSheets()">↺ Refresh</button>
+    <button class="btn btn-sync" id="btn-fetch-covers" onclick="openCoverFetch()" style="background:rgba(167,139,250,0.1);color:var(--purple);border-color:rgba(167,139,250,0.25)">🖼 Fetch Covers</button>
     <button class="btn btn-primary" onclick="openAdd()">＋ Add Anime</button>
   </div>
 </header>
@@ -1326,6 +1343,158 @@ function renderStats(){
   <div class="csec"><div class="ctitle">🏆 Top 10 Rated</div>${top10.length?`<div class="top10">${top10.map((a,i)=>`<div class="top10-row" onclick="openDet('${a.id}')"><div class="top10-rank ${rankCls(i)}">#${i+1}</div>${a.cover?`<img class="top10-img" src="${esc(a.cover)}" alt="" loading="lazy" onerror="this.style.display='none'">`:`<div class="top10-img" style="display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--text3)">${initial(a.title)}</div>`}<div class="top10-title">${esc(a.title)}</div><div class="top10-r">★ ${a.rating}</div></div>`).join('')}</div>`:'<div style="color:var(--text3);font-size:12px">Rate some anime to see your top 10</div>'}</div>`;
 }
 
+
+/* ============================================================
+   COVER FETCH ENGINE
+   Queries AniList by MAL ID (idMal) in batches of 10.
+   Rate limit: 90 req/min → 1 req per 700ms to stay safe.
+   Saves each cover back to Google Sheets as it's found.
+   ============================================================ */
+
+let coverFetchCancelled = false;
+
+// AniList query — fetch up to 10 anime by their MAL IDs in one request
+const COVER_QUERY = `
+query ($ids: [Int]) {
+  Page(page: 1, perPage: 10) {
+    media(idMal_in: $ids, type: ANIME) {
+      idMal
+      coverImage { large medium }
+      title { romaji english }
+    }
+  }
+}`;
+
+function openCoverFetch() {
+  const missing = DB.filter(a => !a.cover && (a.malId || a.malUrl));
+  if (!missing.length) {
+    toast('All anime already have cover images ✓');
+    return;
+  }
+  // Reset UI
+  coverFetchCancelled = false;
+  document.getElementById('cfetch-fill').style.width = '0%';
+  document.getElementById('cfetch-count').textContent = `0 / ${missing.length}`;
+  document.getElementById('cfetch-current').textContent = 'Starting…';
+  document.getElementById('cfetch-found').textContent = '0';
+  document.getElementById('cfetch-missing').textContent = '0';
+  document.getElementById('cfetch-saved').textContent = '0';
+  document.getElementById('cfetch-done-msg').style.display = 'none';
+  document.getElementById('cfetch-close-btn').style.display = 'none';
+  document.getElementById('cfetch-cancel-btn').style.display = '';
+  document.getElementById('cfetch-overlay').classList.add('open');
+  // Start fetching
+  runCoverFetch(missing);
+}
+
+function closeCoverFetch() {
+  document.getElementById('cfetch-overlay').classList.remove('open');
+  renderLib();
+}
+
+function cancelCoverFetch() {
+  coverFetchCancelled = true;
+  document.getElementById('cfetch-current').textContent = 'Cancelled.';
+  document.getElementById('cfetch-close-btn').style.display = '';
+  document.getElementById('cfetch-cancel-btn').style.display = 'none';
+}
+
+async function runCoverFetch(missing) {
+  const total = missing.length;
+  let done = 0, found = 0, notFound = 0, saved = 0;
+  const BATCH = 10;   // AniList supports up to 50 but 10 keeps responses fast
+  const DELAY = 700;  // ms between batches — stays under 90 req/min
+
+  // Extract MAL ID from stored malId field or parse from malUrl
+  function getMalId(a) {
+    if (a.malId) return parseInt(a.malId);
+    if (a.malUrl) {
+      const m = String(a.malUrl).match(/anime\/([0-9]+)/);
+      if (m) return parseInt(m[1]);
+    }
+    return null;
+  }
+
+  for (let i = 0; i < missing.length; i += BATCH) {
+    if (coverFetchCancelled) break;
+
+    const batch = missing.slice(i, i + BATCH);
+    const malIds = batch.map(getMalId).filter(Boolean);
+
+    // Update UI
+    const firstName = batch[0]?.title || '…';
+    document.getElementById('cfetch-current').textContent = `Looking up: ${firstName}…`;
+
+    try {
+      const r = await fetch('https://graphql.anilist.co', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ query: COVER_QUERY, variables: { ids: malIds } })
+      });
+      const d = await r.json();
+      const results = d?.data?.Page?.media || [];
+
+      // Build a lookup map malId → cover URL
+      const coverMap = {};
+      results.forEach(m => {
+        if (m.idMal) {
+          coverMap[m.idMal] = m.coverImage?.large || m.coverImage?.medium || null;
+        }
+      });
+
+      // Apply covers to matching anime and save to Sheets
+      for (const anime of batch) {
+        if (coverFetchCancelled) break;
+        const malId = getMalId(anime);
+        const coverUrl = malId ? coverMap[malId] : null;
+
+        done++;
+        const pct = Math.round(done / total * 100);
+        document.getElementById('cfetch-fill').style.width = pct + '%';
+        document.getElementById('cfetch-count').textContent = `${done} / ${total}`;
+
+        if (coverUrl) {
+          found++;
+          document.getElementById('cfetch-found').textContent = found;
+          document.getElementById('cfetch-current').textContent = `Saving: ${anime.title}`;
+
+          // Update local DB immediately so cards refresh in background
+          const idx = DB.findIndex(x => x.id === anime.id);
+          if (idx > -1) DB[idx].cover = coverUrl;
+          anime.cover = coverUrl;
+
+          // Save to Sheets
+          await apiSend('save', { ...anime, cover: coverUrl });
+          saved++;
+          document.getElementById('cfetch-saved').textContent = saved;
+        } else {
+          notFound++;
+          document.getElementById('cfetch-missing').textContent = notFound;
+        }
+      }
+    } catch(e) {
+      console.error('Cover fetch batch error:', e);
+      // Don't stop — just count these as not found and continue
+      done += batch.length;
+      notFound += batch.length;
+      document.getElementById('cfetch-missing').textContent = notFound;
+    }
+
+    // Wait between batches to respect rate limit
+    if (i + BATCH < missing.length && !coverFetchCancelled) {
+      await new Promise(r => setTimeout(r, DELAY));
+    }
+  }
+
+  // Done
+  document.getElementById('cfetch-current').textContent = coverFetchCancelled ? 'Cancelled.' : 'Complete!';
+  document.getElementById('cfetch-done-msg').style.display = coverFetchCancelled ? 'none' : 'block';
+  document.getElementById('cfetch-close-btn').style.display = '';
+  document.getElementById('cfetch-cancel-btn').style.display = 'none';
+  // Update cache
+  localStorage.setItem('anilog_cache', JSON.stringify({ animes: DB, pillars: PILLARS }));
+}
+
 /* ============================================================
    TABS — syncs both top nav (desktop) and bottom nav (mobile)
    ============================================================ */
@@ -1435,5 +1604,25 @@ async function init(){
 
 init();
 </script>
+
+<!-- COVER FETCH MODAL -->
+<div class="cfetch-overlay" id="cfetch-overlay">
+  <div class="cfetch-modal">
+    <div class="cfetch-title">Fetching Covers</div>
+    <div class="cfetch-sub">Looking up cover images from AniList for all anime without one. This may take a minute for large lists.</div>
+    <div class="cfetch-track"><div class="cfetch-fill" id="cfetch-fill"></div></div>
+    <div class="cfetch-count" id="cfetch-count">0 / 0</div>
+    <div class="cfetch-current" id="cfetch-current">Starting…</div>
+    <div class="cfetch-stats">
+      <div class="cfetch-stat"><div class="cfetch-stat-n" id="cfetch-found" style="color:var(--green)">0</div><div class="cfetch-stat-l">Found</div></div>
+      <div class="cfetch-stat"><div class="cfetch-stat-n" id="cfetch-missing" style="color:var(--text3)">0</div><div class="cfetch-stat-l">Not found</div></div>
+      <div class="cfetch-stat"><div class="cfetch-stat-n" id="cfetch-saved" style="color:var(--blue)">0</div><div class="cfetch-stat-l">Saved</div></div>
+    </div>
+    <div class="cfetch-done-msg" id="cfetch-done-msg">✓ All done! Covers have been saved to your Google Sheet.</div>
+    <button class="btn btn-sm" id="cfetch-close-btn" onclick="closeCoverFetch()" style="display:none">Close</button>
+    <button class="btn btn-sm" id="cfetch-cancel-btn" onclick="cancelCoverFetch()">Cancel</button>
+  </div>
+</div>
+
 </body>
 </html>
