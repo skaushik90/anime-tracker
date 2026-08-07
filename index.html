@@ -604,6 +604,24 @@ body {
   .view-toggle{display:none}
 }
 
+
+/* ── INLINE FACTOR EDITING IN DETAIL MODAL ── */
+.inline-factor-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.inline-factor-row{display:flex;flex-direction:column;gap:3px;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;transition:border-color .15s}
+.inline-factor-row:hover{border-color:var(--border2)}
+.inline-factor-label{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.inline-factor-sel{background:transparent;border:none;color:var(--text);font-size:13px;font-weight:600;font-family:inherit;outline:none;cursor:pointer;width:100%;padding:0}
+.inline-factor-sel.has-value{color:var(--purple)}
+.inline-factor-sel option{background:var(--s3)}
+.det-critic-avg{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.2);border-radius:8px;margin-bottom:8px}
+.det-critic-avg-num{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--purple);min-width:48px;text-align:center}
+.det-critic-avg-info{flex:1}
+.det-critic-avg-label{font-size:12px;font-weight:500;color:var(--text2)}
+.det-critic-avg-sub{font-size:10px;color:var(--text3);margin-top:2px}
+.saving-flash{animation:savePulse .6s ease}
+@keyframes savePulse{0%{opacity:1}50%{opacity:.4}100%{opacity:1}}
+@media(max-width:640px){.inline-factor-grid{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -906,6 +924,8 @@ async function loadFromSheets(){
     DB.forEach(a => { a.title = String(a.title); });
     PILLARS=pillarRes.pillars||[];
     lastSaved=new Date();
+    // Always write fresh Sheets data back to cache — this persists covers
+    localStorage.setItem('anilog_cache',JSON.stringify({animes:DB,pillars:PILLARS}));
     updateHS();renderLib();refreshGenreFilter();refreshPillarFilter();
     hideSyncBar();
     setSaveStatus('saved',`Last synced ${lastSaved.toLocaleTimeString()}`);
@@ -1417,23 +1437,23 @@ function openDet(id){
     <div class="dlabel">📺 Content Pillars</div><div style="display:flex;gap:5px;flex-wrap:wrap">${pillarList}</div>
     ${a.notes?`<div class="dlabel">📝 Notes</div><div class="dbox">${esc(a.notes)}</div>`:''}
     ${a.yt?`<div class="dlabel">💡 YouTube Ideas</div><div class="dbox yt">${esc(a.yt)}</div>`:''}
-    <div class="dlabel">⚖ Critic Factor Ratings</div>
-    ${(()=>{
-      const factors=[['plotCoherence','📖 Plot Coherence'],['pacing','⏱ Pacing'],['originality','💡 Premise Originality'],['endingQuality','🏁 Ending Quality'],['charDev','👤 Character Development'],['villainQuality','😈 Villain Quality'],['animationEra','🎨 Animation (vs Era)'],['openingEnding','🎵 Opening / Ending'],['soundDesign','🔊 Sound Design'],['excitement','⚡ Excitement'],['rewatchability','🔁 Rewatchability']];
-      const rated=factors.filter(([k])=>Number(a[k])>0);
-      if(!rated.length) return '<div style="color:var(--text3);font-size:12px;padding:4px 0">No factor ratings yet — click Edit to add them</div>';
-      const vals=rated.map(([k])=>Number(a[k]));
-      const avg=(vals.reduce((s,v)=>s+v,0)/vals.length).toFixed(1);
-      const sc=n=>{const v=Math.round(n);return v<=2?'fscore-1':v<=4?'fscore-3':v<=6?'fscore-5':v<=8?'fscore-7':'fscore-9'};
-      return `<div class="critic-avg"><div class="critic-avg-num">${avg}</div><div class="critic-avg-label">Critic Average<br><span style="font-size:10px;color:var(--text3)">${rated.length}/${factors.length} factors rated</span></div></div>
-      <div class="critic-grid">${factors.map(([k,lbl])=>Number(a[k])>0?`<div class="critic-item"><span class="critic-item-label">${lbl}</span><span class="fscore ${sc(Number(a[k]))}">${a[k]}/10</span></div>`:'').join('')}</div>`;
-    })()}
+    <div class="dlabel">⚖ Critic Factor Ratings <span style="font-size:9px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(tap a score to update — saves automatically)</span></div>
+    <div class="det-critic-avg" id="det-avg-box">
+      <div class="det-critic-avg-num" id="det-avg-num">—</div>
+      <div class="det-critic-avg-info">
+        <div class="det-critic-avg-label">Critic Average</div>
+        <div class="det-critic-avg-sub" id="det-avg-sub">Rate the factors below</div>
+      </div>
+    </div>
+    <div class="inline-factor-grid" id="det-factors"></div>
     <div style="margin-top:16px;display:flex;gap:8px">
       <button class="btn btn-primary" onclick="closeDet();openEdit('${a.id}')">Edit</button>
       ${a.malUrl?`<button class="btn btn-sm" onclick="window.open('${esc(a.malUrl)}','_blank')">MAL ↗</button>`:''}
       <button class="btn btn-sm" onclick="closeDet()">Close</button>
     </div>`;
   document.getElementById('ov-det').classList.add('open');
+  // Build inline factor editor AFTER innerHTML is set
+  buildDetFactors(a);
 }
 function closeDet(){document.getElementById('ov-det').classList.remove('open')}
 
@@ -1670,6 +1690,83 @@ async function runCoverFetch(missing) {
 }
 
 
+
+/* ============================================================
+   INLINE CRITIC FACTOR EDITOR (in detail modal)
+   ============================================================ */
+const DET_FACTORS = [["plotCoherence", "📖 Plot Coherence"], ["pacing", "⏱ Pacing"], ["originality", "💡 Premise Originality"], ["endingQuality", "🏁 Ending Quality"], ["charDev", "👤 Character Development"], ["villainQuality", "😈 Villain Quality"], ["animationEra", "🎨 Animation (vs Era)"], ["openingEnding", "🎵 Opening / Ending"], ["soundDesign", "🔊 Sound Design"], ["excitement", "⚡ Excitement"], ["rewatchability", "🔁 Rewatchability"]];
+
+function buildDetFactors(anime) {
+  const grid = document.getElementById('det-factors');
+  if (!grid) return;
+  grid.innerHTML = DET_FACTORS.map(([key, label]) => {
+    const cur = Number(anime[key] || 0);
+    const opts = '<option value="">— Rate —</option>' +
+      [1,2,3,4,5,6,7,8,9,10].map(v =>
+        `<option value="${v}"${cur===v?' selected':''}>${v}/10</option>`
+      ).join('');
+    return `<div class="inline-factor-row">
+      <div class="inline-factor-label">${label}</div>
+      <select class="inline-factor-sel${cur?' has-value':''}"
+        data-key="${key}" data-id="${anime.id}"
+        onchange="handleFactorChange(this)">
+        ${opts}
+      </select>
+    </div>`;
+  }).join('');
+  updateDetAvg(anime);
+}
+
+function updateDetAvg(anime) {
+  const vals = DET_FACTORS.map(([k]) => Number(anime[k]||0)).filter(v=>v>0);
+  const avgBox = document.getElementById('det-avg-num');
+  const subBox = document.getElementById('det-avg-sub');
+  if (!avgBox) return;
+  if (!vals.length) {
+    avgBox.textContent = '—';
+    subBox.textContent = 'No factors rated yet';
+    return;
+  }
+  const avg = (vals.reduce((s,v)=>s+v,0)/vals.length).toFixed(1);
+  avgBox.textContent = avg;
+  subBox.textContent = `${vals.length} of ${DET_FACTORS.length} factors rated`;
+  // Color the avg by score
+  const n = parseFloat(avg);
+  avgBox.style.color = n>=9?'var(--purple)':n>=7?'var(--green)':n>=5?'var(--gold)':n>=3?'var(--orange)':'var(--red)';
+}
+
+let factorSaveTimer = null;
+async function handleFactorChange(sel) {
+  const animeId = sel.dataset.id;
+  const key = sel.dataset.key;
+  const val = parseInt(sel.value) || null;
+
+  // Update has-value class for styling
+  sel.classList.toggle('has-value', !!val);
+
+  // Update in-memory DB immediately
+  const anime = DB.find(a => a.id === animeId);
+  if (!anime) return;
+  anime[key] = val;
+
+  // Update the average display live
+  updateDetAvg(anime);
+
+  // Update cards/list in background (no full re-render flash)
+  localStorage.setItem('anilog_cache', JSON.stringify({animes:DB, pillars:PILLARS}));
+
+  // Debounce the Sheets save (300ms) so rapid changes batch together
+  clearTimeout(factorSaveTimer);
+  setSaveStatus('saving', 'Saving…');
+  const avgBox = document.getElementById('det-avg-num');
+  if (avgBox) avgBox.classList.add('saving-flash');
+
+  factorSaveTimer = setTimeout(async () => {
+    const ok = await saveToSheets(anime);
+    toast(ok ? 'Factor saved ✓' : '⚠ Saved locally');
+  }, 300);
+}
+
 /* ============================================================
    VIEW TOGGLE (Cards / List)
    ============================================================ */
@@ -1867,7 +1964,11 @@ async function init(){
   // Show cached data instantly while network loads
   const cached=localStorage.getItem('anilog_cache');
   if(cached){
-    try{const d=JSON.parse(cached);DB=d.animes||[];PILLARS=d.pillars||[];updateHS();renderLib();refreshGenreFilter();refreshPillarFilter();}catch(e){}
+    try{
+      const d=JSON.parse(cached);
+      DB=d.animes||[];PILLARS=d.pillars||[];
+      updateHS();renderLib();refreshGenreFilter();refreshPillarFilter();
+    }catch(e){}
   }
 
   await loadFromSheets();
