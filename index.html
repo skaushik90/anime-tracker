@@ -727,7 +727,7 @@ body {
 /* ============================================================
    CONFIG — Google Apps Script Web App URL
    ============================================================ */
-const API = "https://script.google.com/macros/s/AKfycbyS_hOTvYwp1hqW_ooJUzsN61zwz9pTJUeLXKocplg1Rx73shNFpLsOlG_eNMWzlb4bcQ/exec";
+const API = "https://script.google.com/macros/s/AKfycbxMI6XWNX2WDfN3-oJb8DtuaN3gHpNVnRpB3nAqMH78vg63qrU0oVSsKK1bwmMWyRB_Kg/exec";
 
 /* ============================================================
    CONSTANTS
@@ -774,7 +774,9 @@ async function loadFromSheets(){
       apiGet('getPillars')
     ]);
     if(animeRes.error) throw new Error(animeRes.error);
-    DB=animeRes.animes||[];
+    DB=(animeRes.animes||[]).filter(a => a && a.id && a.title && String(a.title).trim() !== '' && String(a.title) !== 'title');
+    // Coerce all titles to strings (Sheets can return numbers for purely numeric cells)
+    DB.forEach(a => { a.title = String(a.title); });
     PILLARS=pillarRes.pillars||[];
     lastSaved=new Date();
     updateHS();renderLib();refreshGenreFilter();refreshPillarFilter();
@@ -782,13 +784,10 @@ async function loadFromSheets(){
     setSaveStatus('saved',`Last synced ${lastSaved.toLocaleTimeString()}`);
     document.getElementById('db-status').style.color='var(--green)';
   }catch(e){
-    // Log the REAL error so it's visible in DevTools console
-    console.error('loadFromSheets failed:', e.message, e);
-    const msg = e.message && e.message.length < 120 ? e.message : 'Check console for details';
-    showSyncBar('Could not reach Google Sheets — ' + msg,'error');
+    showSyncBar('Could not reach Google Sheets — showing cached data','error');
     // Fallback to localStorage cache
     const cached=localStorage.getItem('anilog_cache');
-    if(cached){try{const d=JSON.parse(cached);DB=d.animes||[];PILLARS=d.pillars||[];}catch(ce){console.error('Cache parse error:',ce)}}
+    if(cached){const d=JSON.parse(cached);DB=d.animes||[];PILLARS=d.pillars||[];}
     updateHS();renderLib();refreshGenreFilter();refreshPillarFilter();
     setSaveStatus('error','Offline — using cache');
     document.getElementById('db-status').style.color='var(--red)';
@@ -863,6 +862,7 @@ function updateHS(){
    ============================================================ */
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2)}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function initial(s){const t=String(s||'').trim();return t.length?t.charAt(0).toUpperCase():'?'}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800)}
 function ovClick(e,ovId,fn){if(e.target.id===ovId)window[fn]()}
 
@@ -1167,7 +1167,7 @@ function renderLib(){
     const sc=SCLS[a.status]||'P';
     const stars=[1,2,3,4,5].map(i=>`<span class="star${(Number(a.rating)||0)>=i*2?' on':''}">★</span>`).join('');
     const tierBadge=a.tier&&a.tier!=='?'?`<div class="card-tier" style="background:${TCOL[a.tier]}">${a.tier}</div>`:'';
-    const cover=a.cover?`<img src="${esc(a.cover)}" alt="" loading="lazy" onerror="this.style.display='none'">`:`<div class="card-ph">${a.title.charAt(0)}</div>`;
+    const cover=a.cover?`<img src="${esc(a.cover)}" alt="" loading="lazy" onerror="this.style.display='none'">`:`<div class="card-ph">${initial(a.title)}</div>`;
     const epPct=a.epW&&a.epT?Math.round(Number(a.epW)/Number(a.epT)*100):0;
     const epBar=a.epT?`<div class="ep-bar"><div class="ep-bar-fill" style="width:${epPct}%"></div></div>`:'';
     const pillarsArr=toArr(a.pillars);const genresArr=toArr(a.genres);
@@ -1218,7 +1218,7 @@ function openDet(id){
   const pillarList=toArr(a.pillars).map(p=>`<span class="tag pillar" style="font-size:11px">${esc(p)}</span>`).join('')||'<span style="color:var(--text3);font-size:12px">None</span>';
   const epStr=a.epW||a.epT?`${a.epW||'?'} / ${a.epT||'?'} eps`:'—';
   const malLink=a.malUrl?`<a href="${esc(a.malUrl)}" target="_blank" style="color:var(--blue);font-size:12px;text-decoration:underline">Open on MyAnimeList ↗</a>`:'';
-  const heroEl=a.cover?`<img class="det-hero" src="${esc(a.cover)}" alt="" onerror="this.style.display='none'">`:`<div class="det-hero-ph">${esc(a.title.charAt(0))}</div>`;
+  const heroEl=a.cover?`<img class="det-hero" src="${esc(a.cover)}" alt="" onerror="this.style.display='none'">`:`<div class="det-hero-ph">${esc(initial(a.title))}</div>`;
   const dateStr=a.dateWatched?new Date(a.dateWatched+'T00:00:00').toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}):'—';
   document.getElementById('det-body').innerHTML=`
     ${heroEl}${malLink}
@@ -1256,7 +1256,7 @@ function renderTier(){
     const label=t==='?'?'Unranked':t+' Tier';
     const cards=list.length?list.map(a=>`
       <div class="tcard" onclick="openDet('${a.id}')">
-        <div class="tcard-th">${a.cover?`<img src="${esc(a.cover)}" loading="lazy" onerror="this.style.display='none'">`:''}${!a.cover?a.title.charAt(0):''}</div>
+        <div class="tcard-th">${a.cover?`<img src="${esc(a.cover)}" loading="lazy" onerror="this.style.display='none'">`:''}${!a.cover?initial(a.title):''}</div>
         <div class="tcard-info"><div class="tcard-t">${esc(a.title)}</div>${a.rating?`<div class="tcard-r">★ ${a.rating}/10</div>`:''}</div>
       </div>`).join(''):`<div class="tempty">No anime here yet</div>`;
     const sec=document.createElement('div');sec.className='tsec';
@@ -1276,7 +1276,7 @@ function renderPillars(){
     const animes=DB.filter(a=>toArr(a.pillars).includes(p));
     const rows=animes.length?animes.slice(0,6).map(a=>`
       <div class="pv-row" onclick="openDet('${a.id}')">
-        <div class="pv-th">${a.cover?`<img src="${esc(a.cover)}" loading="lazy" onerror="this.style.display='none'">`:''}${!a.cover?a.title.charAt(0):''}</div>
+        <div class="pv-th">${a.cover?`<img src="${esc(a.cover)}" loading="lazy" onerror="this.style.display='none'">`:''}${!a.cover?initial(a.title):''}</div>
         <div class="pv-t">${esc(a.title)}</div>
         ${a.rating?`<div class="pv-r">★${a.rating}</div>`:''}
       </div>`).join(''):`<div class="pv-empty">No anime assigned yet</div>`;
@@ -1323,7 +1323,7 @@ function renderStats(){
     <div class="csec"><div class="ctitle">Rating Distribution</div><div class="rdist">${rd.map((n,i)=>`<div class="rdb-w"><div class="rdb" style="height:${Math.round(n/maxRD*76)}px"></div><div class="rdl">${i+1}</div></div>`).join('')}</div></div>
     <div class="csec"><div class="ctitle">Tier Breakdown</div>${['S','A','B','C','D'].map(t=>{const n=DB.filter(a=>a.tier===t).length;return `<div class="brow"><div class="blabel" style="color:${TCOL[t]};font-family:'Bebas Neue',sans-serif;font-size:17px;min-width:30px">${t}</div><div class="btrack"><div class="bfill" style="width:${total?Math.round(n/total*100):0}%;background:${TCOL[t]}"></div></div><div class="bval">${n}</div></div>`}).join('')}</div>
   </div>
-  <div class="csec"><div class="ctitle">🏆 Top 10 Rated</div>${top10.length?`<div class="top10">${top10.map((a,i)=>`<div class="top10-row" onclick="openDet('${a.id}')"><div class="top10-rank ${rankCls(i)}">#${i+1}</div>${a.cover?`<img class="top10-img" src="${esc(a.cover)}" alt="" loading="lazy" onerror="this.style.display='none'">`:`<div class="top10-img" style="display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--text3)">${a.title.charAt(0)}</div>`}<div class="top10-title">${esc(a.title)}</div><div class="top10-r">★ ${a.rating}</div></div>`).join('')}</div>`:'<div style="color:var(--text3);font-size:12px">Rate some anime to see your top 10</div>'}</div>`;
+  <div class="csec"><div class="ctitle">🏆 Top 10 Rated</div>${top10.length?`<div class="top10">${top10.map((a,i)=>`<div class="top10-row" onclick="openDet('${a.id}')"><div class="top10-rank ${rankCls(i)}">#${i+1}</div>${a.cover?`<img class="top10-img" src="${esc(a.cover)}" alt="" loading="lazy" onerror="this.style.display='none'">`:`<div class="top10-img" style="display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--text3)">${initial(a.title)}</div>`}<div class="top10-title">${esc(a.title)}</div><div class="top10-r">★ ${a.rating}</div></div>`).join('')}</div>`:'<div style="color:var(--text3);font-size:12px">Rate some anime to see your top 10</div>'}</div>`;
 }
 
 /* ============================================================
