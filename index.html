@@ -782,10 +782,13 @@ async function loadFromSheets(){
     setSaveStatus('saved',`Last synced ${lastSaved.toLocaleTimeString()}`);
     document.getElementById('db-status').style.color='var(--green)';
   }catch(e){
-    showSyncBar('Could not reach Google Sheets — showing cached data','error');
+    // Log the REAL error so it's visible in DevTools console
+    console.error('loadFromSheets failed:', e.message, e);
+    const msg = e.message && e.message.length < 120 ? e.message : 'Check console for details';
+    showSyncBar('Could not reach Google Sheets — ' + msg,'error');
     // Fallback to localStorage cache
     const cached=localStorage.getItem('anilog_cache');
-    if(cached){const d=JSON.parse(cached);DB=d.animes||[];PILLARS=d.pillars||[];}
+    if(cached){try{const d=JSON.parse(cached);DB=d.animes||[];PILLARS=d.pillars||[];}catch(ce){console.error('Cache parse error:',ce)}}
     updateHS();renderLib();refreshGenreFilter();refreshPillarFilter();
     setSaveStatus('error','Offline — using cache');
     document.getElementById('db-status').style.color='var(--red)';
