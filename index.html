@@ -541,6 +541,69 @@ body {
 .cfetch-stat-n{font-family:'Bebas Neue',sans-serif;font-size:26px}
 .cfetch-stat-l{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
 .cfetch-done-msg{font-size:13px;color:var(--green);margin-bottom:16px;display:none}
+
+/* ── CRITIC FACTORS ─────────────────────────────── */
+.factors-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+.factor-row{display:flex;flex-direction:column;gap:4px}
+.factor-row label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.factor-row select{background:var(--s2);border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;cursor:pointer}
+.factor-row select:focus{border-color:var(--accent)}
+.factor-row select.rated{border-color:rgba(167,139,250,0.4);color:var(--purple)}
+
+/* FACTOR SCORE BADGE */
+.fscore{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:8px;font-size:10px;font-weight:600}
+.fscore-1,.fscore-2{background:rgba(248,113,113,0.15);color:var(--red)}
+.fscore-3,.fscore-4{background:rgba(251,146,60,0.15);color:var(--orange)}
+.fscore-5,.fscore-6{background:rgba(251,191,36,0.15);color:var(--gold)}
+.fscore-7,.fscore-8{background:rgba(52,211,153,0.15);color:var(--green)}
+.fscore-9,.fscore-10{background:rgba(167,139,250,0.2);color:var(--purple)}
+.fscore-0{background:var(--s3);color:var(--text3)}
+
+/* CRITIC SCORE SUMMARY in detail modal */
+.critic-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.critic-item{display:flex;align-items:center;justify-content:space-between;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:7px 10px}
+.critic-item-label{font-size:11px;color:var(--text2)}
+.critic-avg{display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.2);border-radius:8px;margin-top:8px}
+.critic-avg-num{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--purple)}
+.critic-avg-label{font-size:11px;color:var(--text3)}
+
+/* LIST VIEW */
+.list-view{display:none;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.list-view.show{display:block}
+.list-table{width:100%;border-collapse:collapse;min-width:900px}
+.list-table th{padding:8px 12px;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none;background:var(--s1);position:sticky;top:0;z-index:2}
+.list-table th:hover{color:var(--text2)}
+.list-table th.sort-active{color:var(--accent)}
+.list-table th .sort-arrow{font-size:8px;margin-left:3px}
+.list-table td{padding:7px 12px;font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap}
+.list-table tr:hover td{background:var(--s2)}
+.list-table tr{cursor:pointer}
+.lt-cover{width:28px;height:40px;object-fit:cover;border-radius:3px;background:var(--s3);vertical-align:middle}
+.lt-cover-ph{width:28px;height:40px;background:var(--s3);border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--text3);vertical-align:middle}
+.lt-title{font-weight:500;max-width:180px;overflow:hidden;text-overflow:ellipsis}
+.lt-tier{width:22px;height:22px;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:12px;color:#fff}
+.view-toggle{display:flex;gap:3px;background:var(--s2);border:1px solid var(--border);border-radius:var(--radius);padding:3px}
+.vtbtn{padding:5px 10px;border-radius:6px;color:var(--text3);font-size:11px;cursor:pointer;transition:all .12s;user-select:none}
+.vtbtn.on{background:var(--s4);color:var(--text)}
+
+/* FACTOR FILTER DROPDOWN */
+.factor-filter-wrap{position:relative}
+.factor-filter-btn{padding:8px 12px;background:var(--s2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text2);font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;font-family:inherit}
+.factor-filter-btn.active{border-color:rgba(167,139,250,0.4);color:var(--purple)}
+.factor-dropdown{position:absolute;top:calc(100% + 6px);left:0;background:var(--s2);border:1px solid var(--border2);border-radius:10px;padding:10px;z-index:50;display:none;min-width:240px;box-shadow:0 8px 32px rgba(0,0,0,0.4)}
+.factor-dropdown.open{display:block}
+.fdd-row{display:flex;align-items:center;gap:8px;padding:4px 0}
+.fdd-label{font-size:11px;color:var(--text2);flex:1}
+.fdd-sel{background:var(--s3);border:1px solid var(--border);border-radius:6px;padding:3px 6px;color:var(--text);font-size:11px;font-family:inherit;outline:none;width:80px}
+.fdd-clear{font-size:10px;color:var(--text3);cursor:pointer;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:transparent;font-family:inherit}
+.fdd-clear:hover{color:var(--accent);border-color:var(--accent)}
+
+@media(max-width:640px){
+  .factors-grid{grid-template-columns:1fr}
+  .critic-grid{grid-template-columns:1fr}
+  .view-toggle{display:none}
+}
+
 </style>
 </head>
 <body>
@@ -601,6 +664,31 @@ body {
         <div class="sbtn on" data-sort="added" onclick="setSort('added')">Latest</div>
         <div class="sbtn" data-sort="rating" onclick="setSort('rating')">Score</div>
         <div class="sbtn" data-sort="title" onclick="setSort('title')">A–Z</div>
+        <div class="sbtn" data-sort="criticAvg" onclick="setSort('criticAvg')">Critic ↓</div>
+      </div>
+      <div class="factor-filter-wrap" id="ffw">
+        <button class="factor-filter-btn" id="ffbtn" onclick="toggleFactorDropdown()">⚖ Critic Filters</button>
+        <div class="factor-dropdown" id="fdd">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-size:11px;font-weight:600;color:var(--text2)">Filter by factor score ≥</span>
+            <button class="fdd-clear" onclick="clearFactorFilters()">Clear all</button>
+          </div>
+          <div class="fdd-row"><div class="fdd-label">📖 Plot Coherence</div><select class="fdd-sel" id="ff-plotCoherence" onchange="renderLib()"><option value="">Any</option><option value="5">5+</option><option value="6">6+</option><option value="7">7+</option><option value="8">8+</option><option value="9">9+</option><option value="10">10+</option></select></div>
+          <div class="fdd-row"><div class="fdd-label">⏱ Pacing</div><select class="fdd-sel" id="ff-pacing" onchange="renderLib()"><option value="">Any</option><option value="5">5+</option><option value="6">6+</option><option value="7">7+</option><option value="8">8+</option><option value="9">9+</option><option value="10">10+</option></select></div>
+          <div class="fdd-row"><div class="fdd-label">💡 Premise Originality</div><select class="fdd-sel" id="ff-originality" onchange="renderLib()"><option value="">Any</option><option value="5">5+</option><option value="6">6+</option><option value="7">7+</option><option value="8">8+</option><option value="9">9+</option><option value="10">10+</option></select></div>
+          <div class="fdd-row"><div class="fdd-label">🏁 Ending Quality</div><select class="fdd-sel" id="ff-endingQuality" onchange="renderLib()"><option value="">Any</option><option value="5">5+</option><option value="6">6+</option><option value="7">7+</option><option value="8">8+</option><option value="9">9+</option><option value="10">10+</option></select></div>
+          <div class="fdd-row"><div class="fdd-label">👤 Character Development</div><select class="fdd-sel" id="ff-charDev" onchange="renderLib()"><option value="">Any</option><option value="5">5+</option><option value="6">6+</option><option value="7">7+</option><option value="8">8+</option><option value="9">9+</option><option value="10">10+</option></select></div>
+          <div class="fdd-row"><div class="fdd-label">😈 Villain Quality</div><select class="fdd-sel" id="ff-villainQuality" onchange="renderLib()"><option value="">Any</option><option value="5">5+</option><option value="6">6+</option><option value="7">7+</option><option value="8">8+</option><option value="9">9+</option><option value="10">10+</option></select></div>
+          <div class="fdd-row"><div class="fdd-label">🎨 Animation (vs Era)</div><select class="fdd-sel" id="ff-animationEra" onchange="renderLib()"><option value="">Any</option><option value="5">5+</option><option value="6">6+</option><option value="7">7+</option><option value="8">8+</option><option value="9">9+</option><option value="10">10+</option></select></div>
+          <div class="fdd-row"><div class="fdd-label">🎵 Opening / Ending</div><select class="fdd-sel" id="ff-openingEnding" onchange="renderLib()"><option value="">Any</option><option value="5">5+</option><option value="6">6+</option><option value="7">7+</option><option value="8">8+</option><option value="9">9+</option><option value="10">10+</option></select></div>
+          <div class="fdd-row"><div class="fdd-label">🔊 Sound Design</div><select class="fdd-sel" id="ff-soundDesign" onchange="renderLib()"><option value="">Any</option><option value="5">5+</option><option value="6">6+</option><option value="7">7+</option><option value="8">8+</option><option value="9">9+</option><option value="10">10+</option></select></div>
+          <div class="fdd-row"><div class="fdd-label">⚡ Excitement</div><select class="fdd-sel" id="ff-excitement" onchange="renderLib()"><option value="">Any</option><option value="5">5+</option><option value="6">6+</option><option value="7">7+</option><option value="8">8+</option><option value="9">9+</option><option value="10">10+</option></select></div>
+          <div class="fdd-row"><div class="fdd-label">🔁 Rewatchability</div><select class="fdd-sel" id="ff-rewatchability" onchange="renderLib()"><option value="">Any</option><option value="5">5+</option><option value="6">6+</option><option value="7">7+</option><option value="8">8+</option><option value="9">9+</option><option value="10">10+</option></select></div>
+        </div>
+      </div>
+      <div class="view-toggle">
+        <div class="vtbtn on" id="vt-cards" onclick="setView('cards')">⊞ Cards</div>
+        <div class="vtbtn" id="vt-list" onclick="setView('list')">☰ List</div>
       </div>
     </div>
     <div class="spills">
@@ -612,6 +700,12 @@ body {
       <div class="spill" data-s="On Hold" onclick="setSt('On Hold')">On Hold</div>
     </div>
     <div class="grid" id="grid"></div>
+    <div class="list-view" id="list-view">
+      <table class="list-table" id="list-table">
+        <thead><tr id="list-head"></tr></thead>
+        <tbody id="list-body"></tbody>
+      </table>
+    </div>
     <div class="empty" id="empty">
       <div class="empty-ico">⛩️</div>
       <h3>Nothing Here Yet</h3>
@@ -676,6 +770,22 @@ body {
         <div class="pillar-new">
           <input type="text" id="new-pillar-inp" placeholder="+ New pillar…" onkeydown="if(event.key==='Enter')addPillarFromInput()">
           <button onclick="addPillarFromInput()">Add</button>
+        </div>
+      </div>
+      <div class="fg full">
+        <label>⚖ Critic Factor Ratings (1–10)</label>
+        <div class="factors-grid" id="factor-selects">
+          <div class="factor-row"><label>📖 Plot Coherence</label><select id="f-plotCoherence" class="factor-row select" onchange="this.className='factor-row select'+(this.value?' rated':'')"><option value="">— Not rated —</option><option value="1">1/10</option><option value="2">2/10</option><option value="3">3/10</option><option value="4">4/10</option><option value="5">5/10</option><option value="6">6/10</option><option value="7">7/10</option><option value="8">8/10</option><option value="9">9/10</option><option value="10">10/10</option></select></div>
+          <div class="factor-row"><label>⏱ Pacing</label><select id="f-pacing" class="factor-row select" onchange="this.className='factor-row select'+(this.value?' rated':'')"><option value="">— Not rated —</option><option value="1">1/10</option><option value="2">2/10</option><option value="3">3/10</option><option value="4">4/10</option><option value="5">5/10</option><option value="6">6/10</option><option value="7">7/10</option><option value="8">8/10</option><option value="9">9/10</option><option value="10">10/10</option></select></div>
+          <div class="factor-row"><label>💡 Premise Originality</label><select id="f-originality" class="factor-row select" onchange="this.className='factor-row select'+(this.value?' rated':'')"><option value="">— Not rated —</option><option value="1">1/10</option><option value="2">2/10</option><option value="3">3/10</option><option value="4">4/10</option><option value="5">5/10</option><option value="6">6/10</option><option value="7">7/10</option><option value="8">8/10</option><option value="9">9/10</option><option value="10">10/10</option></select></div>
+          <div class="factor-row"><label>🏁 Ending Quality</label><select id="f-endingQuality" class="factor-row select" onchange="this.className='factor-row select'+(this.value?' rated':'')"><option value="">— Not rated —</option><option value="1">1/10</option><option value="2">2/10</option><option value="3">3/10</option><option value="4">4/10</option><option value="5">5/10</option><option value="6">6/10</option><option value="7">7/10</option><option value="8">8/10</option><option value="9">9/10</option><option value="10">10/10</option></select></div>
+          <div class="factor-row"><label>👤 Character Development</label><select id="f-charDev" class="factor-row select" onchange="this.className='factor-row select'+(this.value?' rated':'')"><option value="">— Not rated —</option><option value="1">1/10</option><option value="2">2/10</option><option value="3">3/10</option><option value="4">4/10</option><option value="5">5/10</option><option value="6">6/10</option><option value="7">7/10</option><option value="8">8/10</option><option value="9">9/10</option><option value="10">10/10</option></select></div>
+          <div class="factor-row"><label>😈 Villain Quality</label><select id="f-villainQuality" class="factor-row select" onchange="this.className='factor-row select'+(this.value?' rated':'')"><option value="">— Not rated —</option><option value="1">1/10</option><option value="2">2/10</option><option value="3">3/10</option><option value="4">4/10</option><option value="5">5/10</option><option value="6">6/10</option><option value="7">7/10</option><option value="8">8/10</option><option value="9">9/10</option><option value="10">10/10</option></select></div>
+          <div class="factor-row"><label>🎨 Animation (vs Era)</label><select id="f-animationEra" class="factor-row select" onchange="this.className='factor-row select'+(this.value?' rated':'')"><option value="">— Not rated —</option><option value="1">1/10</option><option value="2">2/10</option><option value="3">3/10</option><option value="4">4/10</option><option value="5">5/10</option><option value="6">6/10</option><option value="7">7/10</option><option value="8">8/10</option><option value="9">9/10</option><option value="10">10/10</option></select></div>
+          <div class="factor-row"><label>🎵 Opening / Ending</label><select id="f-openingEnding" class="factor-row select" onchange="this.className='factor-row select'+(this.value?' rated':'')"><option value="">— Not rated —</option><option value="1">1/10</option><option value="2">2/10</option><option value="3">3/10</option><option value="4">4/10</option><option value="5">5/10</option><option value="6">6/10</option><option value="7">7/10</option><option value="8">8/10</option><option value="9">9/10</option><option value="10">10/10</option></select></div>
+          <div class="factor-row"><label>🔊 Sound Design</label><select id="f-soundDesign" class="factor-row select" onchange="this.className='factor-row select'+(this.value?' rated':'')"><option value="">— Not rated —</option><option value="1">1/10</option><option value="2">2/10</option><option value="3">3/10</option><option value="4">4/10</option><option value="5">5/10</option><option value="6">6/10</option><option value="7">7/10</option><option value="8">8/10</option><option value="9">9/10</option><option value="10">10/10</option></select></div>
+          <div class="factor-row"><label>⚡ Excitement</label><select id="f-excitement" class="factor-row select" onchange="this.className='factor-row select'+(this.value?' rated':'')"><option value="">— Not rated —</option><option value="1">1/10</option><option value="2">2/10</option><option value="3">3/10</option><option value="4">4/10</option><option value="5">5/10</option><option value="6">6/10</option><option value="7">7/10</option><option value="8">8/10</option><option value="9">9/10</option><option value="10">10/10</option></select></div>
+          <div class="factor-row"><label>🔁 Rewatchability</label><select id="f-rewatchability" class="factor-row select" onchange="this.className='factor-row select'+(this.value?' rated':'')"><option value="">— Not rated —</option><option value="1">1/10</option><option value="2">2/10</option><option value="3">3/10</option><option value="4">4/10</option><option value="5">5/10</option><option value="6">6/10</option><option value="7">7/10</option><option value="8">8/10</option><option value="9">9/10</option><option value="10">10/10</option></select></div>
         </div>
       </div>
       <div class="fg full"><label>Notes / Review</label><textarea id="f-notes" placeholder="Personal thoughts, themes, what worked…"></textarea></div>
@@ -870,6 +980,9 @@ function updateHS(){
   const rated=DB.filter(a=>a.rating>0);
   document.getElementById('hs-avg').textContent=rated.length?(rated.reduce((s,a)=>s+Number(a.rating),0)/rated.length).toFixed(1):'—';
   document.getElementById('hs-ideas').textContent=DB.filter(a=>a.yt&&String(a.yt).trim()).length;
+  // Update factor filter button highlight
+  const ffActive=['ff-plotCoherence','ff-pacing','ff-originality','ff-endingQuality','ff-charDev','ff-villainQuality','ff-animationEra','ff-openingEnding','ff-soundDesign','ff-excitement','ff-rewatchability'].some(id=>document.getElementById(id)?.value);
+  const ffBtn=document.getElementById('ffbtn');if(ffBtn)ffBtn.classList.toggle('active',ffActive);
   document.getElementById('nb-library').textContent=DB.length;
   document.getElementById('nb-pillars').textContent=PILLARS.length;
 }
@@ -1056,6 +1169,7 @@ function openAdd(){
   editId=null;curRating=0;curTier='?';selMAL=null;formGenres=[];formPillars=[];
   document.getElementById('form-title').textContent='Add Anime';
   ['f-title','f-year','f-epw','f-ept','f-studio','f-mal','f-notes','f-yt'].forEach(id=>document.getElementById(id).value='');
+  ['f-plotCoherence','f-pacing','f-originality','f-endingQuality','f-charDev','f-villainQuality','f-animationEra','f-openingEnding','f-soundDesign','f-excitement','f-rewatchability'].forEach(id=>document.getElementById(id).value="");
   document.getElementById('f-status').value='Completed';
   document.getElementById('f-date').value='';
   document.getElementById('f-rw').value='no';document.getElementById('f-rec').value='yes';
@@ -1086,6 +1200,17 @@ function openEdit(id){
   document.getElementById('f-yt').value=a.yt||'';
   document.getElementById('f-rw').value=a.rw||'no';
   document.getElementById('f-rec').value=a.rec||'yes';
+  document.getElementById('f-plotCoherence').value=a.plotCoherence||'';
+  document.getElementById('f-pacing').value=a.pacing||'';
+  document.getElementById('f-originality').value=a.originality||'';
+  document.getElementById('f-endingQuality').value=a.endingQuality||'';
+  document.getElementById('f-charDev').value=a.charDev||'';
+  document.getElementById('f-villainQuality').value=a.villainQuality||'';
+  document.getElementById('f-animationEra').value=a.animationEra||'';
+  document.getElementById('f-openingEnding').value=a.openingEnding||'';
+  document.getElementById('f-soundDesign').value=a.soundDesign||'';
+  document.getElementById('f-excitement').value=a.excitement||'';
+  document.getElementById('f-rewatchability').value=a.rewatchability||'';
   if(a.cover){document.getElementById('sel-img').src=a.cover;document.getElementById('sel-title').textContent=a.title;document.getElementById('sel-meta').textContent=[a.year,a.studio].filter(Boolean).join(' · ');document.getElementById('mal-sel').classList.add('show')}
   else document.getElementById('mal-sel').classList.remove('show');
   document.getElementById('mal-results').classList.remove('show');document.getElementById('mal-q').value='';
@@ -1123,6 +1248,17 @@ async function saveAnime(){
     pillars:formPillars,
     notes:document.getElementById('f-notes').value.trim(),
     yt:document.getElementById('f-yt').value.trim(),
+        plotCoherence:parseInt(document.getElementById('f-plotCoherence').value)||null,
+    pacing:parseInt(document.getElementById('f-pacing').value)||null,
+    originality:parseInt(document.getElementById('f-originality').value)||null,
+    endingQuality:parseInt(document.getElementById('f-endingQuality').value)||null,
+    charDev:parseInt(document.getElementById('f-charDev').value)||null,
+    villainQuality:parseInt(document.getElementById('f-villainQuality').value)||null,
+    animationEra:parseInt(document.getElementById('f-animationEra').value)||null,
+    openingEnding:parseInt(document.getElementById('f-openingEnding').value)||null,
+    soundDesign:parseInt(document.getElementById('f-soundDesign').value)||null,
+    excitement:parseInt(document.getElementById('f-excitement').value)||null,
+    rewatchability:parseInt(document.getElementById('f-rewatchability').value)||null,
     rw:document.getElementById('f-rw').value,
     rec:document.getElementById('f-rec').value,
     addedAt:existing?.addedAt||Date.now()
@@ -1166,8 +1302,34 @@ function getFiltered(){
   if(fp)list=list.filter(a=>toArr(a.pillars).includes(fp));
   if(ft)list=list.filter(a=>a.tier===ft);
   if(curSt!=='All')list=list.filter(a=>a.status===curSt);
+
+  // Factor filters
+  const ff_plotCoherence=parseInt(document.getElementById('ff-plotCoherence')?.value)||0;
+  const ff_pacing=parseInt(document.getElementById('ff-pacing')?.value)||0;
+  const ff_originality=parseInt(document.getElementById('ff-originality')?.value)||0;
+  const ff_endingQuality=parseInt(document.getElementById('ff-endingQuality')?.value)||0;
+  const ff_charDev=parseInt(document.getElementById('ff-charDev')?.value)||0;
+  const ff_villainQuality=parseInt(document.getElementById('ff-villainQuality')?.value)||0;
+  const ff_animationEra=parseInt(document.getElementById('ff-animationEra')?.value)||0;
+  const ff_openingEnding=parseInt(document.getElementById('ff-openingEnding')?.value)||0;
+  const ff_soundDesign=parseInt(document.getElementById('ff-soundDesign')?.value)||0;
+  const ff_excitement=parseInt(document.getElementById('ff-excitement')?.value)||0;
+  const ff_rewatchability=parseInt(document.getElementById('ff-rewatchability')?.value)||0;
+  if(ff_plotCoherence)list=list.filter(a=>Number(a.plotCoherence||0)>=ff_plotCoherence);
+  if(ff_pacing)list=list.filter(a=>Number(a.pacing||0)>=ff_pacing);
+  if(ff_originality)list=list.filter(a=>Number(a.originality||0)>=ff_originality);
+  if(ff_endingQuality)list=list.filter(a=>Number(a.endingQuality||0)>=ff_endingQuality);
+  if(ff_charDev)list=list.filter(a=>Number(a.charDev||0)>=ff_charDev);
+  if(ff_villainQuality)list=list.filter(a=>Number(a.villainQuality||0)>=ff_villainQuality);
+  if(ff_animationEra)list=list.filter(a=>Number(a.animationEra||0)>=ff_animationEra);
+  if(ff_openingEnding)list=list.filter(a=>Number(a.openingEnding||0)>=ff_openingEnding);
+  if(ff_soundDesign)list=list.filter(a=>Number(a.soundDesign||0)>=ff_soundDesign);
+  if(ff_excitement)list=list.filter(a=>Number(a.excitement||0)>=ff_excitement);
+  if(ff_rewatchability)list=list.filter(a=>Number(a.rewatchability||0)>=ff_rewatchability);
+  const criticAvg=a=>{const vals=[Number(a.plotCoherence||0),Number(a.pacing||0),Number(a.originality||0),Number(a.endingQuality||0),Number(a.charDev||0),Number(a.villainQuality||0),Number(a.animationEra||0),Number(a.openingEnding||0),Number(a.soundDesign||0),Number(a.excitement||0),Number(a.rewatchability||0)].filter(v=>v>0);return vals.length?vals.reduce((s,v)=>s+v,0)/vals.length:0};
   if(curSort==='rating')list.sort((a,b)=>(Number(b.rating)||0)-(Number(a.rating)||0));
   else if(curSort==='title')list.sort((a,b)=>a.title.localeCompare(b.title));
+  else if(curSort==='criticAvg')list.sort((a,b)=>criticAvg(b)-criticAvg(a));
   else list.sort((a,b)=>(Number(b.addedAt)||0)-(Number(a.addedAt)||0));
   return list;
 }
@@ -1179,6 +1341,7 @@ function renderLib(){
   grid.innerHTML='';
   if(!list.length){empty.classList.add('show');return}
   empty.classList.remove('show');
+  if(currentView==='list'){renderListView(list);return;}
   const toArr=v=>Array.isArray(v)?v:(v?String(v).split('|'):[]);
   list.forEach(a=>{
     const sc=SCLS[a.status]||'P';
@@ -1254,6 +1417,17 @@ function openDet(id){
     <div class="dlabel">📺 Content Pillars</div><div style="display:flex;gap:5px;flex-wrap:wrap">${pillarList}</div>
     ${a.notes?`<div class="dlabel">📝 Notes</div><div class="dbox">${esc(a.notes)}</div>`:''}
     ${a.yt?`<div class="dlabel">💡 YouTube Ideas</div><div class="dbox yt">${esc(a.yt)}</div>`:''}
+    <div class="dlabel">⚖ Critic Factor Ratings</div>
+    ${(()=>{
+      const factors=[['plotCoherence','📖 Plot Coherence'],['pacing','⏱ Pacing'],['originality','💡 Premise Originality'],['endingQuality','🏁 Ending Quality'],['charDev','👤 Character Development'],['villainQuality','😈 Villain Quality'],['animationEra','🎨 Animation (vs Era)'],['openingEnding','🎵 Opening / Ending'],['soundDesign','🔊 Sound Design'],['excitement','⚡ Excitement'],['rewatchability','🔁 Rewatchability']];
+      const rated=factors.filter(([k])=>Number(a[k])>0);
+      if(!rated.length) return '<div style="color:var(--text3);font-size:12px;padding:4px 0">No factor ratings yet — click Edit to add them</div>';
+      const vals=rated.map(([k])=>Number(a[k]));
+      const avg=(vals.reduce((s,v)=>s+v,0)/vals.length).toFixed(1);
+      const sc=n=>{const v=Math.round(n);return v<=2?'fscore-1':v<=4?'fscore-3':v<=6?'fscore-5':v<=8?'fscore-7':'fscore-9'};
+      return `<div class="critic-avg"><div class="critic-avg-num">${avg}</div><div class="critic-avg-label">Critic Average<br><span style="font-size:10px;color:var(--text3)">${rated.length}/${factors.length} factors rated</span></div></div>
+      <div class="critic-grid">${factors.map(([k,lbl])=>Number(a[k])>0?`<div class="critic-item"><span class="critic-item-label">${lbl}</span><span class="fscore ${sc(Number(a[k]))}">${a[k]}/10</span></div>`:'').join('')}</div>`;
+    })()}
     <div style="margin-top:16px;display:flex;gap:8px">
       <button class="btn btn-primary" onclick="closeDet();openEdit('${a.id}')">Edit</button>
       ${a.malUrl?`<button class="btn btn-sm" onclick="window.open('${esc(a.malUrl)}','_blank')">MAL ↗</button>`:''}
@@ -1493,6 +1667,110 @@ async function runCoverFetch(missing) {
   document.getElementById('cfetch-cancel-btn').style.display = 'none';
   // Update cache
   localStorage.setItem('anilog_cache', JSON.stringify({ animes: DB, pillars: PILLARS }));
+}
+
+
+/* ============================================================
+   VIEW TOGGLE (Cards / List)
+   ============================================================ */
+let currentView = 'cards';
+function setView(v){
+  currentView=v;
+  document.getElementById('vt-cards').classList.toggle('on',v==='cards');
+  document.getElementById('vt-list').classList.toggle('on',v==='list');
+  document.getElementById('grid').style.display=v==='cards'?'':'none';
+  document.getElementById('list-view').classList.toggle('show',v==='list');
+  renderLib();
+}
+
+function toggleFactorDropdown(){
+  const dd=document.getElementById('fdd');
+  dd.classList.toggle('open');
+  // close when clicking outside
+  if(dd.classList.contains('open')){
+    setTimeout(()=>document.addEventListener('click',closeFddOutside),0);
+  }
+}
+function closeFddOutside(e){
+  if(!document.getElementById('ffw').contains(e.target)){
+    document.getElementById('fdd').classList.remove('open');
+    document.removeEventListener('click',closeFddOutside);
+  }
+}
+function clearFactorFilters(){
+  document.getElementById('ff-plotCoherence').value='';
+  document.getElementById('ff-pacing').value='';
+  document.getElementById('ff-originality').value='';
+  document.getElementById('ff-endingQuality').value='';
+  document.getElementById('ff-charDev').value='';
+  document.getElementById('ff-villainQuality').value='';
+  document.getElementById('ff-animationEra').value='';
+  document.getElementById('ff-openingEnding').value='';
+  document.getElementById('ff-soundDesign').value='';
+  document.getElementById('ff-excitement').value='';
+  document.getElementById('ff-rewatchability').value='';
+  renderLib();
+}
+
+/* ── criticAvg helper (global so renderLib can call it) ── */
+function calcCriticAvg(a){
+  const keys=['plotCoherence','pacing','originality','endingQuality','charDev','villainQuality','animationEra','openingEnding','soundDesign','excitement','rewatchability'];
+  const vals=keys.map(k=>Number(a[k]||0)).filter(v=>v>0);
+  return vals.length?vals.reduce((s,v)=>s+v,0)/vals.length:0;
+}
+function scoreClass(n){const v=Math.round(n);return v<=0?'fscore-0':v<=2?'fscore-1':v<=4?'fscore-3':v<=6?'fscore-5':v<=8?'fscore-7':'fscore-9'}
+
+/* ── LIST VIEW RENDER ─────────────────────────────────── */
+function renderListView(list){
+  const factors=[['plotCoherence','📖 Plot Coherence'],['pacing','⏱ Pacing'],['originality','💡 Premise Originality'],['endingQuality','🏁 Ending Quality'],['charDev','👤 Character Development'],['villainQuality','😈 Villain Quality'],['animationEra','🎨 Animation (vs Era)'],['openingEnding','🎵 Opening / Ending'],['soundDesign','🔊 Sound Design'],['excitement','⚡ Excitement'],['rewatchability','🔁 Rewatchability']];
+
+  // Build header
+  const head=document.getElementById('list-head');
+  const sortCols=[
+    ['cover',''],['title','Title'],['status','Status'],['rating','Score'],
+    ['criticAvg','Critic Avg'],
+    ...factors.map(([k,l])=>[k,l])
+  ];
+  head.innerHTML=sortCols.map(([k,l])=>`<th onclick="${k!='cover'?`setTableSort('${k}')`:'undefined'}"
+    class="${curSort===k?'sort-active':''}" style="${k==='cover'?'width:40px':''}">
+    ${l}${k!=='cover'&&curSort===k?'<span class="sort-arrow">▼</span>':''}
+  </th>`).join('');
+
+  // Build rows
+  const body=document.getElementById('list-body');
+  body.innerHTML=list.map(a=>{
+    const avg=calcCriticAvg(a);
+    const avgStr=avg>0?avg.toFixed(1):'—';
+    const coverEl=a.cover
+      ?`<img class="lt-cover" src="${esc(a.cover)}" loading="lazy" onerror="this.style.display='none'">`
+      :`<div class="lt-cover-ph">${initial(a.title)}</div>`;
+    const tierEl=a.tier&&a.tier!=='?'
+      ?`<div class="lt-tier" style="background:${TCOL[a.tier]}">${a.tier}</div>`
+      :'';
+    const factorCells=factors.map(([k])=>{
+      const v=Number(a[k]||0);
+      return v>0?`<td><span class="fscore ${scoreClass(v)}">${v}</span></td>`:'<td style="color:var(--text3)">—</td>';
+    }).join('');
+    return `<tr onclick="openDet('${a.id}')">
+      <td>${coverEl}</td>
+      <td><div class="lt-title" title="${esc(a.title)}">${tierEl} ${esc(a.title)}</div></td>
+      <td><span style="font-size:10px;padding:2px 7px;border-radius:8px" class="${
+        a.status==='Completed'?'sc-C':a.status==='Watching'?'sc-W':a.status==='Dropped'?'sc-D':'sc-P'
+      }">${esc(a.status)}</span></td>
+      <td><strong style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--gold)">${a.rating||'—'}</strong></td>
+      <td><span class="fscore ${scoreClass(avg)}">${avgStr}</span></td>
+      ${factorCells}
+    </tr>`;
+  }).join('');
+}
+
+let tableSort='';
+function setTableSort(col){
+  tableSort=col;
+  if(col==='criticAvg') setSort('criticAvg');
+  else if(col==='rating') setSort('rating');
+  else if(col==='title') setSort('title');
+  else renderLib();
 }
 
 /* ============================================================
